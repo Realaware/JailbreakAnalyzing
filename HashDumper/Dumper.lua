@@ -31,13 +31,12 @@ Maps = {
     },
     ExitCar = {
         Constants = {'OnVehicleJumpExited', 'LastVehicleExit', 'FireServer'},
-        isFunction = true,
         Modify = function(Function)
            local _old = debug.getupvalue(Function, 1);
-           debug.setupvalue(Function, 1, { old = _old })
+           debug.setupvalue(Function, 1, { _old })
         end,
         Fix = function(Function)
-            debug.setupvalue(Function, 1, debug.getupvalue(Function, 1).old);
+            debug.setupvalue(Function, 1, debug.getupvalue(Function, 1)[1]);
         end
     },
     PlaySound = {
@@ -74,7 +73,6 @@ Maps = {
             local Index = table.find(Cons, 'Inner');
 
             Hashes.OpenSafe = Cons[Index + 1];
-            print(Cons[Index + 1])
         end
     },
 
@@ -105,6 +103,22 @@ Maps = {
         ProtoIndex = 6,
         UpvalueIndex = 2,
     },
+    SkipSafe = {
+        Location = require(game:GetService("ReplicatedStorage").Game.SafesUI).SetupUseSafes,
+        ProtoIndex = {2, 2},
+        UpvalueIndex = 2,
+        Modify = function(Function)
+            debug.setupvalue(Function, 1, {
+                Disconnect = function()
+                    
+                end
+            })
+            debug.setupvalue(Function, 3, {
+                CloseSlider = function() end
+            })
+            debug.setupvalue(Function, 4, {})
+        end
+    }
 }
 
 FindingMethod = {
@@ -131,8 +145,9 @@ FindingMethod = {
         end
     end,
     FindCustomMethods = function(MapData, ...)
+        local Exception = {'Location', 'Fix'}
         for Index, Value in pairs (MapData) do
-            if (type(Value) == 'function' and Index ~= 'Location') then
+            if (type(Value) == 'function' and not table.find(Exception, Index)) then
                 Value(...);
             end
         end
@@ -166,11 +181,23 @@ for Index, Value in pairs (Maps) do
     local LocatedFunction = Value.Location;
     if (LocatedFunction) then
         if (Value.ProtoIndex and Value.UpvalueIndex) then
-            local Function = debug.getproto(LocatedFunction, Value.ProtoIndex);
-            FindingMethod.FindCustomMethods(Value, Function);
-            
-            FindingMethod.HookFireServer(Function, Value.UpvalueIndex, Value, Index);
-            FindingMethod.Call(Function, Value);
+            if (type(Value.ProtoIndex) == 'table') then
+                local Function = LocatedFunction;
+
+                for _, Value2 in pairs (Value.ProtoIndex) do
+                    Function = debug.getproto(Function, Value2);
+                end
+
+                FindingMethod.FindCustomMethods(Value, Function);
+                FindingMethod.HookFireServer(Function, Value.UpvalueIndex, Value, Index);
+                FindingMethod.Call(Function, Value);
+            else
+                local Function = debug.getproto(LocatedFunction, Value.ProtoIndex);
+                FindingMethod.FindCustomMethods(Value, Function);
+                
+                FindingMethod.HookFireServer(Function, Value.UpvalueIndex, Value, Index);
+                FindingMethod.Call(Function, Value);
+            end
         end
         if (not Value.ProtoIndex and not Value.UpvalueIndex) then
             FindingMethod.FindCustomMethods(Value, LocatedFunction);
@@ -201,7 +228,6 @@ for Index, Value in pairs (getgc()) do
                     if (not Value2.ProtoIndex and Value2.UpvalueIndex) then
                         if (Value2.isFunction and not Value2.noScan) then
                             local Upvalue = debug.getupvalue(Value, Value2.UpvalueIndex);
-                            print(Index2)
                             FindingMethod.UpvalueScan(Upvalue, Value2, Index2);
                         end
                         if (Value2.isFunction and Value2.noScan) then
@@ -222,4 +248,9 @@ for Index, Value in pairs (getgc()) do
     end
 end
 
-table.foreach(Hashes, warn)
+local content = "";
+for i,v in pairs (Hashes) do
+    content = content .. "\n" .. string.format('HashName: %s   HashValue: %s', i, tostring(v));
+end
+
+print(content)
