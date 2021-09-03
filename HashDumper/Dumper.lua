@@ -269,25 +269,4 @@ for Index, Value in pairs (getgc()) do
     end
 end
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/forumsLib/main/source.lua"))()
-local Forums = Library.new("robloxscripts.com")
-local HashSection = Forums:NewSection('Hashes');
-local Load = loadstring(game:HttpGet('https://raw.githubusercontent.com/jiwonpaly/NotificationLibrary/main/main.lua'))();
-local Library2 = Load.new({ PaddingItem = 5 });
-
-for i, v in pairs (Hashes) do
-    HashSection:NewButton(string.format('%s:  %s', i, tostring(v)), function()
-        if (type(v) ~= 'function') then
-            setclipboard(v);
-            Library2:addNoti({
-                Title = 'Copied',
-                Content = 'Your hash was copied !'
-            });
-        else
-            Library2:addNoti({
-                Title = 'Alert',
-                Content = string.format('since %s\'s type is %s, you can\'t copy it.', i, type(v));
-            });
-        end
-    end)
-end
+return Hashes
