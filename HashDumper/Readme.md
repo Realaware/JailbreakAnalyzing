@@ -6,9 +6,7 @@ Make JB Script much faster with high quality
 
 # Changelog
 
-> New Hash added. <br/>
-> Fixed ExitCar method that loads function. <br/>
-> some improves.
+> Following recent JB updates, i've fixed gunshop hash.
 
 # Hashes
 Hashes that this dumper currently fetch from games.
