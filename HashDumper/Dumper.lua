@@ -33,10 +33,7 @@ Maps = {
         Constants = {'OnVehicleJumpExited', 'LastVehicleExit', 'FireServer'},
         Modify = function(Function)
            local _old = debug.getupvalue(Function, 1);
-           debug.setupvalue(Function, 1, { _old })
-        end,
-        Fix = function(Function)
-            debug.setupvalue(Function, 1, debug.getupvalue(Function, 1)[1]);
+           debug.setupvalue(Function, 1, { old = _old });
         end
     },
     PlaySound = {
@@ -86,7 +83,7 @@ Maps = {
         ProtoIndex = 1,
         Modify = function(Function)
             debug.setupvalue(Function, 1, {
-                hasItemName = function(...)
+                GetEquipped = function(...)
                     return false;
                 end
             })
@@ -96,7 +93,7 @@ Maps = {
                 end
             })
         end,
-        UpvalueIndex = 3,
+        UpvalueIndex = 2,
     },
     SwitchTeam = {
         Location = require(game:GetService("ReplicatedStorage").Game.TeamChooseUI).Show,
@@ -118,7 +115,31 @@ Maps = {
             })
             debug.setupvalue(Function, 4, {})
         end
-    }
+    },
+    EatDonut = {
+        Location = require(game:GetService("ReplicatedStorage").Game.Item.Donut).InputBegan,
+        ProtoIndex = 1,
+        UpvalueIndex = 2,
+        Modify = function(Function)
+            debug.setupvalue(Function, 1, {
+                SpringItemRotation = {
+                    SetTarget = function()
+                        
+                    end
+                },
+                Config = {
+                    Motion = {
+                        Hip = {
+                            Springs = {
+            
+                            }
+                        }
+                    }
+                },
+                Local = true
+            })
+        end
+    },
 }
 
 FindingMethod = {
@@ -248,9 +269,25 @@ for Index, Value in pairs (getgc()) do
     end
 end
 
-local content = "";
-for i,v in pairs (Hashes) do
-    content = content .. "\n" .. string.format('HashName: %s   HashValue: %s', i, tostring(v));
-end
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/forumsLib/main/source.lua"))()
+local Forums = Library.new("robloxscripts.com")
+local HashSection = Forums:NewSection('Hashes');
+local Load = loadstring(game:HttpGet('https://raw.githubusercontent.com/jiwonpaly/NotificationLibrary/main/main.lua'))();
+local Library2 = Load.new({ PaddingItem = 5 });
 
-print(content)
+for i, v in pairs (Hashes) do
+    HashSection:NewButton(string.format('%s:  %s', i, tostring(v)), function()
+        if (type(v) ~= 'function') then
+            setclipboard(v);
+            Library2:addNoti({
+                Title = 'Copied',
+                Content = 'Your hash was copied !'
+            });
+        else
+            Library2:addNoti({
+                Title = 'Alert',
+                Content = string.format('since %s\'s type is %s, you can\'t copy it.', i, type(v));
+            });
+        end
+    end)
+end
